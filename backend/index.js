@@ -1,3 +1,17 @@
+const express = require('express');
+const axios = require('axios');
+const cors = require('cors');
+const path = require('path');
+require('dotenv').config();
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+app.use(cors());
+
+// ----------------------
+// Extract Query Function
+// ----------------------
 function extractQueryType(input) {
   if (!input) return null;
 
@@ -22,36 +36,24 @@ function extractQueryType(input) {
   return { type: 'name', value: input };
 }
 
-const express = require('express');
-const axios = require('axios');
-const cors = require('cors');
-require('dotenv').config();
-
-// console.log('Loaded YOUTUBE_API_KEY:', process.env.YOUTUBE_API_KEY ? process.env.YOUTUBE_API_KEY.slice(0, 4) + '...' : 'NOT FOUND');
-
-const app = express();
-app.use(cors());
-const PORT = 5000;
-
+// ----------------------
+// /api/channel Route
+// ----------------------
 app.get('/api/channel', async (req, res) => {
   const query = req.query.query;
-
   if (!query) return res.status(400).json({ error: 'Missing channel query' });
 
   try {
     const apiKey = process.env.YOUTUBE_API_KEY;
-    const searchRes = await axios.get(
-      `https://www.googleapis.com/youtube/v3/search`,
-      {
-        params: {
-          q: query,
-          part: 'snippet',
-          type: 'channel',
-          maxResults: 1,
-          key: apiKey,
-        },
-      }
-    );
+    const searchRes = await axios.get('https://www.googleapis.com/youtube/v3/search', {
+      params: {
+        q: query,
+        part: 'snippet',
+        type: 'channel',
+        maxResults: 1,
+        key: apiKey,
+      },
+    });
 
     const items = searchRes.data.items;
     if (!items.length) {
@@ -60,26 +62,24 @@ app.get('/api/channel', async (req, res) => {
 
     const channelId = items[0].snippet.channelId;
 
-    const channelRes = await axios.get(
-      `https://www.googleapis.com/youtube/v3/channels`,
-      {
-        params: {
-          id: channelId,
-          part: 'snippet,statistics,brandingSettings,contentDetails,topicDetails',
-          key: apiKey,
-        },
-      }
-    );
-
-    res.json({
-      data: channelRes.data.items[0],
+    const channelRes = await axios.get('https://www.googleapis.com/youtube/v3/channels', {
+      params: {
+        id: channelId,
+        part: 'snippet,statistics,brandingSettings,contentDetails,topicDetails',
+        key: apiKey,
+      },
     });
+
+    res.json({ data: channelRes.data.items[0] });
   } catch (err) {
     console.error('YouTube API error:', err.response?.data || err.message);
     res.status(500).json({ error: 'Failed to fetch data', details: err.message });
   }
 });
 
+// ----------------------
+// /api/videos Route
+// ----------------------
 app.get('/api/videos', async (req, res) => {
   const { channelId, pageToken } = req.query;
   const apiKey = process.env.YOUTUBE_API_KEY;
@@ -99,14 +99,18 @@ app.get('/api/videos', async (req, res) => {
   }
 });
 
-
-const path = require('path');
+// ----------------------
+// Serve React Frontend
+// ----------------------
 app.use(express.static(path.join(__dirname, '../frontend/build')));
-app.get('*', (req, res) => {
+
+app.get('/*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/build/index.html'));
-})
+});
 
-
+// ----------------------
+// Start Server
+// ----------------------
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
