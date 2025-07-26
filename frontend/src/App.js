@@ -16,7 +16,7 @@ function App() {
     setNextPageToken(null);
 
     try {
-      const res = await axios.get(`http://localhost:5000/api/channel?query=${searchInput}`);
+      const res = await axios.get(`https://youtubeapp-nb35.onrender.com/api/channel?query=${searchInput}`);
       const data = res.data.data;
       setChannelData(data);
       fetchVideos(data.id);
@@ -29,7 +29,7 @@ function App() {
 
   const fetchVideos = async (channelId, pageToken = null) => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/videos`, {
+      const res = await axios.get(`https://youtubeapp-nb35.onrender.com/api/videos`, {
         params: { channelId, pageToken },
       });
       setVideos(prev => [...prev, ...res.data.items]);
