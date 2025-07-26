@@ -1,8 +1,14 @@
-backend/node_modules
+# root .gitignore
+
+# Node backend
+backend/node_modules/
 backend/.env
-frontend/node_modules
-frontend/build
+
+# React frontend
+frontend/node_modules/
+frontend/build/
+frontend/.env
+
+# OS / Editor files
 *.log
 .DS_Store
-Thumbs.db
-*.env
